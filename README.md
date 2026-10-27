@@ -1,55 +1,112 @@
-# myygo
+**English** · [简体中文](README.zh-CN.md)
 
-**A small DSL sketch for describing *Yu-Gi-Oh!* card effects as data**, plus two
-unfinished scripts of card-effect definitions (Galaxy/Photon and Horus
-archetypes) written against that DSL.
+<p align="center">
+  <img src="assets/logo.svg" width="112" height="112" alt="myygo logo">
+</p>
 
-### What it is
+<h1 align="center">myygo</h1>
+<p align="center"><strong>Yu-Gi-Oh! card effects as data</strong></p>
+<p align="center">A compact, lambda-driven DSL that turns card prose into a uniform ten-field effect tuple — auditable like text, structured like code.</p>
 
-The DSL models an effect as a fixed 9-slot tuple
-`[type, loc, condFn, costChkFn, costFn, opChkFn, opTargetFn, opFn, countLimit, flag]`
-where every hook is a plain lambda over inferred arguments (`c` current card,
-`tp` current player, `tg` targets returned by the previous hook, `re` reason
-effect, …). Cards are always a `Cards` collection object with chainable
-predicates/actions (`Get(...)`, `L.fn(...)`, `Cards.isSet/isCode/canSpsum/spsum/...`).
-The authoritative description is the module docstring at
-[`script.py`](script.py) (lines 1–72; `script2.py` repeats it with slight drift).
+> **Archived design sketch.** Not runnable, not maintained, and no host engine is included. The artifact is the DSL design and the card data. See [archive notes](docs/project-status.md).
 
-### Why it exists
+[Quick start](#quick-start) · [What it can do](#what-it-can-do-now) · [Architecture](#architecture) · [Develop](#how-to-develop) · [Roadmap](#roadmap)
 
-It is the card-authoring layer of a personal *Yu-Gi-Oh!* rules engine: the
-engine provides the globals (`IGNITE`, `Get`, `L`, `Cards`, `Choose`, `Draw`,
-…) and these files supply the card behaviour. Each effect is preceded by the
-official card text as a Chinese docstring, so the file doubles as a
-card-implementation checklist.
+## Why it is interesting
 
-### How to run
+Yu-Gi-Oh! effects are written as prose. Implementing them usually means scattering conditions, costs, targets and resolutions across ad-hoc functions. myygo keeps the Chinese card text directly above its effect data and forces every effect through the same shape:
 
-None — **not runnable as-is.** Neither file imports anything and neither
-defines the engine symbols it uses (`IGNITE`, `Get`, `L`, `Cards`, `Choose`,
-`Draw`, `MZONE`, …). They are effect-data sketches intended for an engine that
-is **not present in this directory**; `script.py` also fails Python parsing at
-line 90 (a positional argument after a keyword argument), as does `script2.py`.
-No setup file, entrypoint, tests, or host engine is included.
+```text
+[ type, loc, cond, costCheck, cost, opCheck, opTarget, op, countLimit, flag ]
+```
 
-### Status
+Each hook is either `None` or a plain lambda over inferred context (`c` current card, `tp` current player, `tg` targets, `re` reason effect, …). Card and zone operations are chainable (`Get`, `L.*`, `Cards.is*`, `Cards.spsum`, …), so a complete effect reads as a few lines next to the text it implements.
 
-**deprecated (2025 era) – kept as an archive.** Not because the libraries are
-old (there are none), but because this is an orphaned fragment: the engine that
-consumes the DSL is absent, and `script2.py` is an unfinished intermediate
-revision. `script.py` (2025-04-16) is the more complete sketch, but it does not parse;
-`script2.py` (2025-04-17) copies the card data, renames some constants (`BATTLED`→`BATD`,
-`isLevel`→`isLv`, `isMon`…), and then breaks down at
-[`script2.py`](script2.py) (lines 308–316): it switches to an undeclared lowercase
-micro-syntax (`ignite`, `hand|mzone`, `equip(...)`) that the documented API does
-not define. Read as a design sketch of a terser DSL, not as code.
+The repository is a sketch, not an engine: it shows the authoring layer and a set of real card entries.
 
-### License
+## Quick start
 
-The repository's own code is licensed under [AGPL-3.0-only](LICENSE).
-Two third-party elements are embedded as **data, not code**: (a) the Chinese
-card-effect texts used as docstrings throughout, and (b) card passcodes
-(e.g. `93717133`, `16528181`, `98555327`, `863795`) and set/attribute constants
-— both are Konami *Yu-Gi-Oh!* official card data. They are quoted for the
-purpose of implementing the rules and should be treated as nominative
-references if this is ever published; no Konami code or assets are copied.
+No install, no dependencies, no entrypoint. Start with the contract, then read one card.
+
+```bash
+git clone https://github.com/ZisIsNotZis/myygo.git
+cd myygo
+sed -n '1,72p' script.py     # the DSL contract
+sed -n '73,94p' script.py    # first card: Chinese text + effect data
+```
+
+Then continue through `script.py`; each card is a block of Chinese text followed by its effect list. `script2.py` repeats the same cards against a terser syntax that was never finished.
+
+## What it can do now
+
+- **One shape for different effect classes** — activation (`IGNITE`), trigger (`SUMED`, `DESTROYED`, …), "do" triggers (`ATKING`, …), continuous effects and summon procedures all use the same tuple.
+- **Chain predicates and actions** — `L` builds partial lambdas, `Cards` treats zero, one or many cards as one collection, and `Get` / `Choose` handle zones and choices.
+- **Encode limits and flags** — per-turn counters, shared counter IDs, `CONTINUOUS`, `NODISABLE`, `TOEQUIPER`, and related flags.
+- **Keep text and logic together** — 11 card entries in each script, with the Chinese card text directly above the effect data.
+- **Stay dependency-free** — two plain Python files with no imports; the engine that supplies the globals is deliberately absent.
+
+## Architecture
+
+```text
+.
+├── assets/logo.svg          project mark
+├── docs/project-status.md   provenance and archive status
+├── script.py                DSL reference + the more complete card set
+├── script2.py               alternate revision: renamed constants, unfinished micro-syntax
+├── README.md                this file
+├── README.zh-CN.md          Simplified Chinese README
+├── LICENSE                  AGPL-3.0-only
+└── .gitignore
+```
+
+Three layers are visible in the source:
+
+1. **Contract** — the module docstring in `script.py` (lines 1–72) defines the ten fields, hook arguments, zones, flags and helper vocabulary. `script2.py` repeats it with small drift.
+2. **Helpers** — `L`, `Cards`, `Get`, `Choose`, `Register`, `Draw`, zone constants and flags. They are referenced, never defined here.
+3. **Card data** — one list of effect tuples per card, preceded by its Chinese text. Both scripts carry the same 11 cards; `script.py` is the more complete version.
+
+The host engine, card database and any executable entrypoint are not in this repository. Neither script imports anything or parses as written.
+
+## How to develop
+
+This is an archive, so there is no build, test suite or supported workflow. If you want to resume the sketch:
+
+1. Read the module docstring in `script.py` first; it is the closest thing to a specification.
+2. Keep the ten-field shape and the inferred hook arguments stable, or update the contract and every card together.
+3. Treat `script.py` as the reference. `script2.py` is an experiment, not a successor.
+4. Fix the parse errors before adding effects: `script.py` is missing a comma between the `Choose(...)` call and the `[1, 1]` limit (lines 91–92); `script2.py` switches at line 308 to undeclared lowercase micro-syntax (`ignite`, `hand|mzone`, `equip(...)`) and leaves its final card entry unterminated.
+5. Keep each card's Chinese text directly above its effect list.
+
+## How to contribute
+
+The project is archived and not maintained, so pull requests may not be reviewed. If you want to build on the DSL, fork it. If you find a factual error in the documentation, an issue with the exact file and line is welcome.
+
+## Roadmap
+
+### Implemented
+
+- [x] Ten-field effect contract documented in the module docstring.
+- [x] Helper vocabulary sketched: `L`, `Cards`, `Get`, `Choose`, `Register`, `Draw`, zones and flags.
+- [x] 11 card entries with Chinese text in each script.
+- [x] Provenance and archive status recorded in `docs/project-status.md`.
+- [x] AGPL-3.0-only license.
+
+### Planned — only if the sketch is resumed
+
+- [ ] Make both scripts parse as Python.
+- [ ] Collapse the duplicate card data into one source of truth.
+- [ ] Extract the DSL contract into a standalone specification.
+- [ ] Add a minimal host-engine adapter and executable examples.
+- [ ] Decide whether `script2.py`'s terser micro-syntax is worth defining — or delete it.
+
+No dates are promised; the repository is an archive.
+
+## Future vision
+
+If resumed, myygo would be the authoring layer of a small, readable Yu-Gi-Oh! rules engine: card text and executable effect data side by side, with an engine small enough to audit. The interesting question is not card coverage, but whether messy, interacting card effects can stay declarative without turning into a second programming language.
+
+## License and third-party data
+
+The repository's code is licensed under [AGPL-3.0-only](LICENSE).
+
+The Chinese card-effect texts, passcodes and set/attribute constants are Konami card data, quoted as data rather than code to implement the rules. They are nominative references; no Konami code or artwork is included. Yu-Gi-Oh! is a trademark of Konami Digital Entertainment. This is an unofficial project, not affiliated with or endorsed by Konami.

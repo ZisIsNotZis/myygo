@@ -107,6 +107,6 @@ sed -n '73,94p' script.py    # 第一张卡：中文文本 + 效果数据
 
 ## 许可证与第三方数据
 
-仓库代码使用 [AGPL-3.0-only](LICENSE)。
+仓库代码使用 [AGPL-3.0-only](LICENSE)，版权归 ZisIsNotZis 所有（© 2026）。
 
 中文卡牌效果文本、卡片密码以及系列/属性常量属于 Konami 的卡牌数据；它们在这里作为数据而非代码被引用，用于实现规则，仅作说明性引用。仓库不包含 Konami 的代码或美术素材。《游戏王》是 Konami Digital Entertainment 的商标。本项目为非官方项目，与 Konami 无隶属或背书关系。

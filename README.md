@@ -107,6 +107,6 @@ If resumed, myygo would be the authoring layer of a small, readable Yu-Gi-Oh! ru
 
 ## License and third-party data
 
-The repository's code is licensed under [AGPL-3.0-only](LICENSE).
+The repository's code is licensed under [AGPL-3.0-only](LICENSE). Copyright © 2026 ZisIsNotZis.
 
 The Chinese card-effect texts, passcodes and set/attribute constants are Konami card data, quoted as data rather than code to implement the rules. They are nominative references; no Konami code or artwork is included. Yu-Gi-Oh! is a trademark of Konami Digital Entertainment. This is an unofficial project, not affiliated with or endorsed by Konami.

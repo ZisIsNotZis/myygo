@@ -1,10 +1,28 @@
+# Python
 __pycache__/
 *.pyc
 .venv/
-node_modules/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .ipynb_checkpoints/
+node_modules/
+
+# Local environment and tool state
 .pi/
 .env
 .env.*
 !.env.example
+
+# Editors and OS noise
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+desktop.ini
